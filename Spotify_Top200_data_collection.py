@@ -24,8 +24,8 @@ from spotipy.oauth2 import SpotifyClientCredentials
 client_credentials_manager = SpotifyClientCredentials(client_id, client_secret)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-start_date = datetime.date(2017,1,1)
-end_date = datetime.date(2018,1,1)
+start_date = datetime.date(2018,1,1)
+end_date = datetime.date(2019,1,1)
 
 streams = pd.DataFrame()
 
