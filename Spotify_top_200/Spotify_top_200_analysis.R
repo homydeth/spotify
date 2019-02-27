@@ -1,17 +1,17 @@
 require(ggplot2)
 require(scales)
 require(dplyr)
-require(plotly)
 require(memisc)
 require(gridExtra)
 require(GGally)
 require(cluster)
 require(factoextra)
 require(matrixStats)
-
+require(data.table)
+require(RColorBrewer)
 
 #to install packages when the UI won't work
-#install.packages('package_name', dependencies=TRUE, repos='http://cran.rstudio.com/')
+#install.packages('ggplot2', dependencies=TRUE, repos='http://cran.rstudio.com/')
 
 setwd('C:/Users/Aaron/Documents/Consulting/Deputy/Spotify_API')
 
@@ -40,20 +40,25 @@ summary(model.features)
 write.csv(model.features, file="spotify_top_200_grouped.csv", row.names = F)
 
 #cluster songs based on song features
-cluster.input <- model.features[, c('track_id', 'Track.Name', 'energy', 'liveness', 'tempo', 'speechiness'
-                                    , 'acousticness', 'instrumentalness', 'danceability', 'key'
-                                    , 'duration_ms' ,'loudness', 'mode', 'valence', 'popularity', 'followers')]
+cluster.input <- model.features[, c('track_id', 'Track.Name', 'energy', 'liveness',
+                                    'tempo', 'speechiness', 'acousticness', 
+                                    'instrumentalness', 'danceability', 'key', 
+                                    'duration_ms' ,'loudness', 'mode', 'valence')]
 
 rownames(cluster.input) <- cluster.input$track_id
 
 #scale features for clustering
 cluster.input.scaled <- scale(cluster.input[, c('energy', 'liveness', 'tempo', 'speechiness'
-                                                , 'acousticness', 'instrumentalness', 'danceability', 'key'
-                                                , 'duration_ms' ,'loudness', 'mode', 'valence', 'popularity', 'followers')])
+                                                , 'acousticness', 'instrumentalness', 'danceability'
+                                                , 'key', 'duration_ms' ,'loudness', 'mode'
+                                                , 'valence')])
+
+ggpairs(as.data.frame(cluster.input.scaled))
 
 #check that scaled features have mean 0 and sd 1
-summary(cluster.input.scaled)
+round(colMeans(cluster.input.scaled),digits = 4)
 colSds(cluster.input.scaled)
+
 
 fviz_nbclust(cluster.input.scaled, pam, method = "silhouette")+
   theme_classic()
