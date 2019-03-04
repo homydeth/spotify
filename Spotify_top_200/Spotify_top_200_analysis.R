@@ -8,10 +8,10 @@ require(cluster)
 require(factoextra)
 require(matrixStats)
 require(data.table)
-require(RColorBrewer)
+require(fmsb)
 
 #to install packages when the UI won't work
-#install.packages('ggplot2', dependencies=TRUE, repos='http://cran.rstudio.com/')
+#install.packages('ggradar', dependencies=TRUE, repos='http://cran.rstudio.com/')
 
 setwd('C:/Users/Aaron/Documents/Consulting/Deputy/Spotify_API')
 
@@ -40,7 +40,7 @@ summary(model.features)
 write.csv(model.features, file="spotify_top_200_grouped.csv", row.names = F)
 
 #cluster songs based on song features
-cluster.input <- model.features[, c('track_id', 'Track.Name', 'energy', 'liveness',
+cluster.input <- model.features[, c('track_id', 'energy', 'liveness',
                                     'tempo', 'speechiness', 'acousticness', 
                                     'instrumentalness', 'danceability', 'key', 
                                     'duration_ms' ,'loudness', 'mode', 'valence')]
@@ -52,8 +52,6 @@ cluster.input.scaled <- scale(cluster.input[, c('energy', 'liveness', 'tempo', '
                                                 , 'acousticness', 'instrumentalness', 'danceability'
                                                 , 'key', 'duration_ms' ,'loudness', 'mode'
                                                 , 'valence')])
-
-ggpairs(as.data.frame(cluster.input.scaled))
 
 #check that scaled features have mean 0 and sd 1
 round(colMeans(cluster.input.scaled),digits = 4)
@@ -96,11 +94,36 @@ model.features.grouped <- model.features %>% group_by(cluster) %>%
             med.duration_ms = median(duration_ms),
             med.loudness = median(loudness),
             med.mode = median(mode),
-            med.valence = median(valence),
-            med.popularity = median(popularity),
-            med.followers = median(followers))
+            med.valence = median(valence))
 
 model.features.grouped
 
+model.features.grouped.scaled <- scale(model.features.grouped)
+
 #write data out to csv for import to Python to test classification model
 write.csv(model.features, file="spotify_top_200_clustered.csv", row.names = F)
+
+#create data frame for radar plot
+data <- as.data.frame(model.features.grouped.scaled[,3:14])
+rownames(data)=paste("Cluster" , c(1:3), sep=" ")
+
+#add rows for max and min values
+data=rbind(rep(max(data),12) 
+           , rep(min(data),12) 
+           , data)
+
+colors_in=c( 'red', 'dark green', 'blue')
+
+#plot radar chart
+radarchart(data, 
+           axistype = 0,
+           pty = 32,
+           plty = c(1),
+           plwd = 2,
+           pcol = colors_in,
+           title = 'Median Feature Values (scaled) by Cluster')
+legend(x=1.1, y=1.2, legend = rownames(data[-c(1,2),]), bty = "n", pch=20 ,col=colors_in, cex=1, pt.cex=3)
+
+
+
+
